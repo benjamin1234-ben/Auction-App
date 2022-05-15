@@ -2,26 +2,31 @@ import '../App.css';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { getDefaults, getAccount } from './redux/selector';
-import { updateContract, updateWager} from './redux/slice';
+import { getAccount } from './redux/selector';
+import { updateContract, updateAuctionProps, updateAddress } from './redux/slice';
 import { getAccount } from './redux/selector';
 import * as backend from './build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
 
 const navigate = useNavigate();
+const params = useParams();
 const {standardUnit} = reach;
+const dispatch = useDispatch();
+const _fetch = useSelector();
+const sleep = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 function Auctioneer() {
 	const [creator, setCreator] = useState(false);
 	const [bidder, setBidder] = useState(false);
 	const [waiting, setwaiting] = useState(false);
-	const [timeout, settimeout] = useState(false);
 	const [auctionProps, setAuctionProps] = useState({});
+	const [id, setId] = useState("");
+	const [address, setAddress] = useState();
+	const [_address, set_Address] = useState();
 	const [ctc, setCtc] = useState();
 	const [ctcInfoStr, setCtcInfoStr] = useState();
-    const dispatch = useDispatch();
-    const _fetch = useSelector();
+	const [preview, setPreview] = useState(false);
 
     useEffect(() => {
     	if(!ctcInfoStr && params.role == "creator") {
@@ -29,44 +34,73 @@ function Auctioneer() {
     		const account = _fetch(getAccount.acc);
 	    	setCtc(account.contract(backend));
 	    	setCtcInfoStr(JSON.stringify(await ctc.getInfo(), null, 2));
+	    	set_Address(ctc.getContractAddress());
 	    	dispatch(updateContract(ctc));
-    	} else if(ctcInfoStr && params.role == "bidder") {
+	    	dispatch(updateAddress(_address));
+    	} else if(ctcInfoStr || params.role == "bidder") {
     		setBidder(true);
     		const account = _fetch(getAccount.acc);
-    		setCtc(account.contract(backend, JSON.parse(ctcInfoStr)));
-    		dispatch(updateContract(ctc));
+    		if(ctcInfoStr) {
+    			setCtc(account.contract(backend, JSON.parse(ctcInfoStr)));
+	    		set_Address(ctc.getContractAddress());
+		    	dispatch(updateContract(ctc));
+		    	dispatch(updateAddress(_address));
 
-    		const interactInterface = {
-    			informTimeout() {
-    				settimeout(true);
-    			},
-    			async acceptWager(wagerAtomic) {
-    				setWagerAmt(reach.formatCurrency(wagerAtomic, 4));
-    			}
+	    		const interactInterface = {
+	    			showAuctionProps(startingBid, timeout, auctionItem) {
+	    				setAuctionProps({startingBid, timeout, auctionItem});
+	    				dispatch(updateAuctionProps(auctionProps));
+	    			},
+	    			showOwner(id, address) {
+	    				setId(id);
+	    				setAddress(address);
+	    			}
+	    		};
+	    		backend.Owner(ctc, interactInterface);
     		};
-    		backend.Guesser(ctc, interactInterface);
     	};
     }, []);
 
-    const setAuctionProps = async(e) => {
+    const initAuctionProps = async(e) => {
     	e.preventDefault;
-    	dispatch(updateWager(wagerAmt));
+    	dispatch(updateAuctionProps(auctionProps));
     	const interactInterface = {
-    		wager: reach.parseCurrency(wagerAmt),
-    		deadline: {ETH: 10, ALGO: 100, CFX: 1000}[reach.connector]
+    		getId() {
+    			return id;
+    		},
+    		getAuctionProps() {
+    			return auctionProps;
+    		}
     	};
-    	backend.Asker(ctc, interactInterface);
+    	backend.Creator(ctc, interactInterface);
+    	setPreview(true);
     };
     const copy = async(e) => {
     	e.preventDefault;
     	navigator.clipboard.writeText(ctcInfoStr);
     	e.target.innerHTML = 'Copied!';
     	e.target.disabled = true;
+    	await sleep(1000);
+    	e.target.disabled = true;
+    	e.target.innerHTML = 'Copy';
+    	setCreator(false);
+    	setwaiting(true);
+    	await sleep(10000);
+    	if(timeout == false && params.role == "creator") { navigate("/auction/creator"); };
     };
     const acceptTerms = (e) => {
     	e.preventDefault;
-    	navigate("/play");
-    }
+    	if(timeout == false && params.role == "bidder") { navigate("/auction/bidder"); };
+    };
+    const handleFile = (e) => {
+    	e.preventDefault;
+    	const file = e.target.files[0];
+    	const reader = new FileReader();
+
+    	reader.onload = () => {
+    		setAuctionProps({auctionItem : reader.readAsDataUrl(file);});
+    	};
+    };
 
 	return (
 		{ creator && 
@@ -79,41 +113,54 @@ function Auctioneer() {
 					<button className="" onClick={copy}>Copy</button>
 				</div>
 				<div className="">
-					<h1>Please Initiate the Wager</h1>
+					<h1>Please Initialize the Auction Props</h1>
 					<div className="">
-						<input value={_fetch(getDefaults.defaultWager)} placeholder={`The default wager amount ${_fetch(getDefaults.defaultWager)}`} onChange={(e) => setState(wagerAmt = e.currentTarget.value)} type="text"/>
-						<button className="" onClick={setWager}>Initiate Wager</button>
+						<input value={} placeholder="Id / Name of auction Item" onChange={(e) => setId(e.currentTarget.value)} type="text"/>
+						<input value={} placeholder="Starting Bid" onChange={(e) => setAuctionProps({startingBid : e.currentTarget.value})} type="text"/>
+						<input value={} placeholder="Time Duration" onChange={(e) => setAuctionProps({timeout : e.currentTarget.value})} type="text"/>
+						<input value={} placeholder="Auction Item" onChange={handleFile} type="file"/>
+					</div>
+					{ preview &&
+						<div className="">
+							<image src={auctionProps.auctionItem}/>
+						</div>
+					}
+					<div className="">
+						<button className="" onClick={initAuctionProps}>Initialize Auction Props</button>
 					</div>
 				</div>
 			</div>
 		}
 		{ bidder && 
 			<div className="">
-				<h1>Paste the Contract Info below to join the game</h1>
+				<h1>Paste the Contract Info below to join the Auction</h1>
 				<div className="">
-					<textarea spellCheck="false" onChange={(e) => setState(ctcInfoStr: e.currentTarget.value)}/>
+					<textarea spellCheck="false" onChange={(e) => setCtcInfoStr(e.currentTarget.value)}/>
 				</div>
 				<div className="">
 					<button className="" onClick={attach}>Attach</button>
 				</div>
 				<div className="">
-					<h1>{wagerAmt ? `Please accept the wager of ${wagerAmt standardUnit}` : 'Attach contract to view the wager'}</h1>
+					{
+						if(ctcInfoStr && params.role == "bidder") {
+							<h1>These are the Auction Props</h1>
+							<h1>Owner : {address}</h1>
+							<h1>Starting Bid : {startingBid standardUnit}</h1>
+							<h1>Time Duration : {timeout}</h1>
+							<h1>Auction Item : {id}</h1>
+						} else if(!ctcInfoStr && params.role == "bidder") {
+							<h1>Attach the Contract to see the Auction Props</h1>
+						}
+					}
 					<div className="">
 						<button className="" onClick={acceptTerms}>Accept Terms</button>
 					</div>
 				</div>
 			</div>
 		}
-		{ waiting &&
+		{ (waiting && params.role == "creator") &&
 			<div>
-		        Waiting for the other Auctioneer...
-		        <br />Think about which move you want to play.
-		    </div>
-		}
-		{ timeout &&
-			<div>
-		        There's has been a Timeout...
-		        <br />Somebody took too long.
+		        Waiting for the Bidders...
 		    </div>
 		}
 	);

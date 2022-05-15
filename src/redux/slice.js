@@ -10,8 +10,9 @@ export const gameSlice = createSlice({
 	initialState : {
 		account : {},
 		contract : "",
-		bids : [],
+		address : "",
 		outcome : "",
+		lastBid : null,
 		auctionProps : { startingBid, timeout, auctionItem },
 		defaults : { defaultFundAmt: '10', standardUnit }
 	},
@@ -22,18 +23,21 @@ export const gameSlice = createSlice({
 		updateContract : (state, action) => {
 			state.contract = action.payload;
 		},
-		updateBids : (state, action) => {
-			state.bids = action.payload;
-		},
 		updateOutcome : (state, action) => {
 			state.outcome = action.payload;
 		},
 		updateAuctionProps : (state, action) => {
 			state.auctionProps = action.payload;
+		},
+		updateAddress : (state, action) => {
+			state.address = action.payload;
+		},
+		updateLastBid : (state, action) => {
+			state.lastBid = action.payload;
 		}
 	}
 });
 
-export const { updateAccount, updateContract, updateBid, updateOutcome, updateAuctionProps } = gameSlice.actions;
+export const { updateAccount, updateContract, updateOutcome, updateAuctionProps, updateAddress, updateLastBid } = gameSlice.actions;
 
 export default gameSlice.reducer;
