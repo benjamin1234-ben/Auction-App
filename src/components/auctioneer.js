@@ -2,18 +2,15 @@ import '../App.css';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { getAccount } from './redux/selector';
-import { updateContract, updateAuctionProps, updateAddress } from './redux/slice';
-import { getAccount } from './redux/selector';
-import * as backend from './build/index.main.mjs';
+import { getAccount } from '../redux/selector';
+import { updateContract, updateAuctionProps, updateAddress } from '../redux/slice';
+import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
+import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
+reach.setWalletFallback(reach.walletFallback({providerEnv: "MainNet", MyAlgoConnect}));
 
-const navigate = useNavigate();
-const params = useParams();
 const {standardUnit} = reach;
-const dispatch = useDispatch();
-const _fetch = useSelector();
 const sleep = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 function Auctioneer() {
@@ -27,6 +24,10 @@ function Auctioneer() {
 	const [ctc, setCtc] = useState();
 	const [ctcInfoStr, setCtcInfoStr] = useState();
 	const [preview, setPreview] = useState(false);
+	const dispatch = useDispatch();
+	const _fetch = useSelector();
+	const navigate = useNavigate();
+	const params = useParams();
 
     useEffect(() => {
     	if(!ctcInfoStr && params.role == "creator") {
@@ -62,7 +63,7 @@ function Auctioneer() {
     }, []);
 
     const initAuctionProps = async(e) => {
-    	e.preventDefault;
+    	e.preventDefault();
     	dispatch(updateAuctionProps(auctionProps));
     	const interactInterface = {
     		getId() {
@@ -76,7 +77,7 @@ function Auctioneer() {
     	setPreview(true);
     };
     const copy = async(e) => {
-    	e.preventDefault;
+    	e.preventDefault();
     	navigator.clipboard.writeText(ctcInfoStr);
     	e.target.innerHTML = 'Copied!';
     	e.target.disabled = true;
@@ -89,11 +90,11 @@ function Auctioneer() {
     	if(timeout == false && params.role == "creator") { navigate("/auction/creator"); };
     };
     const acceptTerms = (e) => {
-    	e.preventDefault;
+    	e.preventDefault();
     	if(timeout == false && params.role == "bidder") { navigate("/auction/bidder"); };
     };
     const handleFile = (e) => {
-    	e.preventDefault;
+    	e.preventDefault();
     	const file = e.target.files[0];
     	const reader = new FileReader();
 
@@ -101,68 +102,68 @@ function Auctioneer() {
     		setAuctionProps({auctionItem : reader.readAsDataUrl(file);});
     	};
     };
+    const viewAuctionProps = () => {
+    	if(ctcInfoStr && params.role == "bidder") {
+			<h1>These are the Auction Props</h1>
+			<h1>Owner : {address}</h1>
+			<h1>Starting Bid : {startingBid standardUnit}</h1>
+			<h1>Time Duration : {timeout}</h1>
+			<h1>Auction Item : {id}</h1>
+		} else if(!ctcInfoStr && params.role == "bidder") {
+			<h1>Attach the Contract to see the Auction Props</h1>
+		}
+    };
 
 	return (
-		{ creator && 
-			<div className="asker">
-				<h1>Copy the Contract Info below and give it to your opponent</h1>
-				<div className="">
-					{ctcInfoStr}
-				</div>
-				<div className="copy_button">
-					<button className="" onClick={copy}>Copy</button>
-				</div>
-				<div className="">
-					<h1>Please Initialize the Auction Props</h1>
+		<div>
+			{creator && 
+				<div className="asker">
+					<h1>Copy the Contract Info below and give it to your opponent</h1>
 					<div className="">
-						<input value={} placeholder="Id / Name of auction Item" onChange={(e) => setId(e.currentTarget.value)} type="text"/>
-						<input value={} placeholder="Starting Bid" onChange={(e) => setAuctionProps({startingBid : e.currentTarget.value})} type="text"/>
-						<input value={} placeholder="Time Duration" onChange={(e) => setAuctionProps({timeout : e.currentTarget.value})} type="text"/>
-						<input value={} placeholder="Auction Item" onChange={handleFile} type="file"/>
+						{ctcInfoStr}
 					</div>
-					{ preview &&
+					<div className="copy_button">
+						<button className="" onClick={copy}>Copy</button>
+					</div>
+					<div className="">
+						<h1>Please Initialize the Auction Props</h1>
 						<div className="">
-							<image src={auctionProps.auctionItem}/>
+							<input value={} placeholder="Id / Name of auction Item" onChange={(e) => setId(e.currentTarget.value)} type="text"/>
+							<input value={} placeholder="Starting Bid" onChange={(e) => setAuctionProps({startingBid : e.currentTarget.value})} type="text"/>
+							<input value={} placeholder="Time Duration" onChange={(e) => setAuctionProps({timeout : e.currentTarget.value})} type="text"/>
+							<input value={} placeholder="Auction Item" onChange={handleFile} type="file"/>
 						</div>
-					}
-					<div className="">
-						<button className="" onClick={initAuctionProps}>Initialize Auction Props</button>
-					</div>
-				</div>
-			</div>
-		}
-		{ bidder && 
-			<div className="">
-				<h1>Paste the Contract Info below to join the Auction</h1>
-				<div className="">
-					<textarea spellCheck="false" onChange={(e) => setCtcInfoStr(e.currentTarget.value)}/>
-				</div>
-				<div className="">
-					<button className="" onClick={attach}>Attach</button>
-				</div>
-				<div className="">
-					{
-						if(ctcInfoStr && params.role == "bidder") {
-							<h1>These are the Auction Props</h1>
-							<h1>Owner : {address}</h1>
-							<h1>Starting Bid : {startingBid standardUnit}</h1>
-							<h1>Time Duration : {timeout}</h1>
-							<h1>Auction Item : {id}</h1>
-						} else if(!ctcInfoStr && params.role == "bidder") {
-							<h1>Attach the Contract to see the Auction Props</h1>
+						{ preview &&
+							<div className="">
+								<image src={auctionProps.auctionItem}/>
+							</div>
 						}
-					}
-					<div className="">
-						<button className="" onClick={acceptTerms}>Accept Terms</button>
+						<div className="">
+							<button className="" onClick={initAuctionProps}>Initialize Auction Props</button>
+						</div>
 					</div>
 				</div>
-			</div>
-		}
-		{ (waiting && params.role == "creator") &&
-			<div>
-		        Waiting for the Bidders...
-		    </div>
-		}
+			}
+			{bidder && 
+				<div className="">
+					<h1>Paste the Contract Info below to join the Auction</h1>
+					<div className="">
+						<textarea spellCheck="false" onChange={(e) => setCtcInfoStr(e.currentTarget.value)}/>
+					</div>
+					<div className="">
+						{ viewAuctionProps() }
+						<div className="">
+							<button className="" onClick={acceptTerms}>Accept Terms</button>
+						</div>
+					</div>
+				</div>
+			}
+			{(waiting && params.role == "creator") &&
+				<div>
+			        Waiting for the Bidders...
+			    </div>
+			}
+		</div>
 	);
 };
 

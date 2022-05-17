@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from './redux/store';
-;import './index.css';
+import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
@@ -12,12 +12,17 @@ ReactDOM.render(
 	  <Provider store={store}>
 	  	<Router>
 	  		<Routes>
-	  			<Route path="/" element={<App/>}/>
-	  			<Route path="/fund_account" element={<FundAccount/>}/>
-	  			<Route path="/role" element={<Role/>}/>
-	  			<Route path="/creator" element={<Creator/>}/>
-	  			<Route path="/bidder" element={<Bidder/>}/>
-	  			<Route path="/owner" element={<Owner/>}/>
+	  			<Route path="/" element={<App/>}>
+		  			<Route path="fund_account" element={<FundAccount/>}/>
+		  			<Route path="role" element={<Role/>}/>
+		  			<Route path="auctioneer" element={<Auctioneer/>}>
+		  				<Route path=":role" element={<Auctioneer/>}/>
+		  			</Route>
+		  			<Route path="auction" element={<Auction/>}>
+		  				<Route path=":role" element={<Auction/>}/>
+		  			</Route>
+		  			<Route path="outcome" element={<Outcome/>}/>
+	  			</Route>
 	  		</Routes>
 	  	</Router>
 	  </Provider>

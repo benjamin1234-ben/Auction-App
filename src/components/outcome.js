@@ -2,17 +2,19 @@ import '../App.css';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { getLastBid, getAuctionProps, getContract } from './redux/selector';
-import * as backend from './build/index.main.mjs';
+import { getLastBid, getAuctionProps, getContract } from '../redux/selector';
+import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
+import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
+reach.setWalletFallback(reach.walletFallback({providerEnv: "MainNet", MyAlgoConnect}));
 
 const {standardUnit} = reach;
-const _fetch = useSelector();
 
 function Outcome() {
 	const [address, setAddress] = useState();
 	const [id, setId] = useState("");
+	const _fetch = useSelector();
 
 	useEffect(() => {
 		const ctc = _fetch(getContract);

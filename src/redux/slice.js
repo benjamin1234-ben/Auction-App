@@ -1,12 +1,14 @@
-import { createSlice } from "@/reduxjs/toolkit";
-import * as backend from './build/index.main.mjs';
+import { createSlice } from "@reduxjs/toolkit";
+import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
+import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
+reach.setWalletFallback(reach.walletFallback({providerEnv: "MainNet", MyAlgoConnect}));
 
 const {standardUnit} = reach;
 
-export const gameSlice = createSlice({
-	name : gameState,
+export const auctionSlice = createSlice({
+	name : "auctionState",
 	initialState : {
 		account : {},
 		contract : "",
@@ -38,6 +40,6 @@ export const gameSlice = createSlice({
 	}
 });
 
-export const { updateAccount, updateContract, updateOutcome, updateAuctionProps, updateAddress, updateLastBid } = gameSlice.actions;
+export const { updateAccount, updateContract, updateOutcome, updateAuctionProps, updateAddress, updateLastBid } = auctionSlice.actions;
 
-export default gameSlice.reducer;
+export default auctionSlice.reducer;

@@ -2,23 +2,25 @@ import '../App.css';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { getContract, getAuctionProps } from './redux/selector';
-import { updateLastBid } from './redux/slice';
-import * as backend from './build/index.main.mjs';
+import { getContract, getAuctionProps } from '../redux/selector';
+import { updateLastBid } from '../redux/slice';
+import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
+import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
+reach.setWalletFallback(reach.walletFallback({providerEnv: "MainNet", MyAlgoConnect}));
 
-const navigate = useNavigate();
-const params = useParams();
 const {standardUnit} = reach;
-const dispatch = useDispatch();
-const _fetch = useSelector();
 
 function Auction() {
 	const [bid, setBid] = useState();
 	const [creator, setCreator] = useState(false);
 	const [bidder, setBidder] = useState(false);
 	const [currentPrice, setCurrentPrice] = useState();
+	const navigate = useNavigate();
+	const params = useParams();
+	const dispatch = useDispatch();
+	const _fetch = useSelector();
 
 	useEffect(() => {
 		if(params.role == "bidder") {
@@ -69,13 +71,13 @@ function Auction() {
 	return (
 		<div>
 			<h1>The Current Price is {currentPrice}</h1>
-			{ params.role == "bidder" &&
+			{params.role == "bidder" &&
 				<div>
 					<input type="text" onChange={(e) => setBid(e.target.value)} placeholder="Place your Bid"/>
 					<button onClick={placeBid}>Bid</button>
 				</div>
 			}
-			{ (params.role == "creator" || params.role == "bidder") &&
+			{(params.role == "creator" || params.role == "bidder") &&
 				<h1>{timer(_fetch(getAuctionProps.timeout)).minutes} : {timer(_fetch(getAuctionProps.timeout)).seconds}</h1>	
 			}
 		<div/>

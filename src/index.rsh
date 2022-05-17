@@ -3,7 +3,7 @@
 const AuctionProps = Object({
   startingBid: UInt,
   timeout: UInt,
-  auctionItem: Btyes(128)
+  auctionItem: Bytes(128)
 });
 
 const BidderProps = {
@@ -12,7 +12,7 @@ const BidderProps = {
 };
 
 const OwnerInterface = {
-  showOwner: Fun([UInt, Address], Null),
+  showOwner: Fun([Bytes(128), Address], Null),
   getAuctionProps: Fun([], AuctionProps),
   ...BidderProps 
 };
@@ -22,7 +22,7 @@ const CreatorInterface = {
   getId: Fun([], Bytes(128))
 };
 
-const emptyAuction = { startingBid: 0, timeout: 0, auctionItem: "" };
+const emptyAuction = { startingBid, timeout, auctionItem };
 
 export const main = Reach.App(() => {
 
