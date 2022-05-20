@@ -3,7 +3,7 @@ import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
 import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
-reach.setWalletFallback(reach.walletFallback({providerEnv: "MainNet", MyAlgoConnect}));
+reach.setWalletFallback(reach.walletFallback({providerEnv: "TestNet", MyAlgoConnect}));
 
 const {standardUnit} = reach;
 
@@ -12,10 +12,10 @@ export const auctionSlice = createSlice({
 	initialState : {
 		account : {},
 		contract : "",
-		address : "",
 		outcome : "",
 		lastBid : null,
-		auctionProps : { startingBid, timeout, auctionItem },
+		auctionProps : { startingBid, timeout },
+		owner : { id, address, auctionItem },
 		defaults : { defaultFundAmt: '10', standardUnit }
 	},
 	reducers : {
@@ -31,8 +31,8 @@ export const auctionSlice = createSlice({
 		updateAuctionProps : (state, action) => {
 			state.auctionProps = action.payload;
 		},
-		updateAddress : (state, action) => {
-			state.address = action.payload;
+		updateOwner : (state, action) => {
+			state.owner = action.payload;
 		},
 		updateLastBid : (state, action) => {
 			state.lastBid = action.payload;

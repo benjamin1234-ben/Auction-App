@@ -8,7 +8,7 @@ import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
 import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
-reach.setWalletFallback(reach.walletFallback({providerEnv: "MainNet", MyAlgoConnect}));
+reach.setWalletFallback(reach.walletFallback({providerEnv: "TestNet", MyAlgoConnect}));
 
 const {standardUnit} = reach;
 
@@ -50,7 +50,7 @@ function Auction() {
 		const ctc = _fetch(getContract);
 		const interactInterface = {
 			getBid(c_price) {
-				// setCurrentPrice(c_price);
+				setCurrentPrice(c_price);
 				return bid;
 			}
 		};

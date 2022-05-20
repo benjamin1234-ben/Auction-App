@@ -5,6 +5,11 @@ import { Provider } from 'react-redux';
 import store from './redux/store';
 import './index.css';
 import App from './App';
+import FundAccount from './components/fund';
+import Role from './components/role'
+import Auctioneer from './components/auctioneer';
+import Auction from './components/auction';
+import Outcome from './components/outcome';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
@@ -13,7 +18,7 @@ ReactDOM.render(
 	  	<Router>
 	  		<Routes>
 	  			<Route path="/" element={<App/>}>
-		  			<Route path="fund_account" element={<FundAccount/>}/>
+		  			<Route path="fund" element={<FundAccount/>}/>
 		  			<Route path="role" element={<Role/>}/>
 		  			<Route path="auctioneer" element={<Auctioneer/>}>
 		  				<Route path=":role" element={<Auctioneer/>}/>

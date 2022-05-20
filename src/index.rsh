@@ -2,27 +2,27 @@
 
 const AuctionProps = Object({
   startingBid: UInt,
-  timeout: UInt,
-  auctionItem: Bytes(128)
+  timeout: UInt
 });
 
 const BidderProps = {
-  getBid: Fun([UInt], Maybe(UInt)),
-  showAuctionProps: Fun([UInt, UInt, Bytes(128)], Null)
+  getBid: Fun([UInt], Maybe(UInt))
 };
 
 const OwnerInterface = {
-  showOwner: Fun([Bytes(128), Address], Null),
+  showOwner: Fun([Bytes(128), Address, Bytes(128)], Null),
+  showAuctionProps: Fun([UInt, UInt], Null),
   getAuctionProps: Fun([], AuctionProps),
   ...BidderProps 
 };
 
 const CreatorInterface = {
   ...OwnerInterface,
-  getId: Fun([], Bytes(128))
+  getId: Fun([], Bytes(128)),
+  getAuctionItem: Fun([], Bytes(128))
 };
 
-const emptyAuction = { startingBid, timeout, auctionItem };
+const emptyAuction = { startingBid: 0, timeout: 0 };
 
 export const main = Reach.App(() => {
 
@@ -32,8 +32,9 @@ export const main = Reach.App(() => {
 
     Creator.only(() => {
       const id = declassify(interact.getId());
+      const auctionItem = declassify(interact.getAuctionItem());
     });
-    Creator.publish(id);
+    Creator.publish(id, auctionItem);
 
     var owner = Creator;
     invariant(balance() == 0);
@@ -42,13 +43,13 @@ export const main = Reach.App(() => {
 
       // Have the owner publish info about the auction
       Owner.only(() => {
-        interact.showOwner(id, owner);
+        interact.showOwner(id, owner, auctionItem);
         const amOwner = this == owner;
-        const { startingBid, timeout, auctionItem } = amOwner ? declassify(interact.getAuctionProps()) : emptyAuction;
-        interact.showAuctionProps(startingBid, timeout, auctionItem);
+        const { startingBid, timeout } = amOwner ? declassify(interact.getAuctionProps()) : emptyAuction;
+        interact.showAuctionProps(startingBid, timeout);
       });
       Owner
-        .publish(startingBid, timeout, auctionItem)
+        .publish(startingBid, timeout)
         .when(amOwner)
         .timeout(false);
 

@@ -7,7 +7,7 @@ import * as backend from './build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
 import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
-reach.setWalletFallback(reach.walletFallback({providerEnv: "MainNet", MyAlgoConnect}));
+reach.setWalletFallback(reach.walletFallback({providerEnv: "TestNet", MyAlgoConnect}));
 
 function App() {
   const [rules, setRules] = useState(true);
@@ -16,7 +16,6 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  useEffect();
 
     const handleClick = async (e) => {
     e.preventDefault();

@@ -8,7 +8,7 @@ import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
 import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
-reach.setWalletFallback(reach.walletFallback({providerEnv: "MainNet", MyAlgoConnect}));
+reach.setWalletFallback(reach.walletFallback({providerEnv: "TestNet", MyAlgoConnect}));
 
 const {standardUnit} = reach;
 const sleep = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -17,9 +17,12 @@ function Auctioneer() {
 	const [creator, setCreator] = useState(false);
 	const [bidder, setBidder] = useState(false);
 	const [waiting, setwaiting] = useState(false);
+	const [viewContract, setViewContract] = useState(false);
+	const [init, setInit] = useState(false);
 	const [auctionProps, setAuctionProps] = useState({});
 	const [id, setId] = useState("");
-	const [address, setAddress] = useState();
+	const [auctionItem, setAuctionItem] = useState("");
+	const [owner, setOwner] = useState({});
 	const [_address, set_Address] = useState();
 	const [ctc, setCtc] = useState();
 	const [ctcInfoStr, setCtcInfoStr] = useState();
@@ -29,13 +32,14 @@ function Auctioneer() {
 	const navigate = useNavigate();
 	const params = useParams();
 
-    useEffect(() => {
+    useEffect((ctcInfoStr) => {
     	if(!ctcInfoStr && params.role == "creator") {
     		setCreator(true);
+    		setInit(true);
     		const account = _fetch(getAccount.acc);
 	    	setCtc(account.contract(backend));
 	    	setCtcInfoStr(JSON.stringify(await ctc.getInfo(), null, 2));
-	    	set_Address(ctc.getContractAddress());
+	    	set_Address(await ctc.getAddress());
 	    	dispatch(updateContract(ctc));
 	    	dispatch(updateAddress(_address));
     	} else if(ctcInfoStr || params.role == "bidder") {
@@ -43,38 +47,46 @@ function Auctioneer() {
     		const account = _fetch(getAccount.acc);
     		if(ctcInfoStr) {
     			setCtc(account.contract(backend, JSON.parse(ctcInfoStr)));
-	    		set_Address(ctc.getContractAddress());
+	    		set_Address(await ctc.getAddress());
 		    	dispatch(updateContract(ctc));
 		    	dispatch(updateAddress(_address));
 
 	    		const interactInterface = {
-	    			showAuctionProps(startingBid, timeout, auctionItem) {
-	    				setAuctionProps({startingBid, timeout, auctionItem});
+	    			showAuctionProps(startingBid, timeout) {
+	    				setAuctionProps({startingBid, timeout});
 	    				dispatch(updateAuctionProps(auctionProps));
 	    			},
-	    			showOwner(id, address) {
+	    			showOwner(id, address, auctionItem) {
 	    				setId(id);
-	    				setAddress(address);
+	    				setAuctionItem(auctionItem);
+	    				dispatch(updateOwner(id, address, auctionItem));
 	    			}
 	    		};
 	    		backend.Owner(ctc, interactInterface);
     		};
     	};
-    }, []);
+    }, [ctcInfoStr]);
 
     const initAuctionProps = async(e) => {
     	e.preventDefault();
     	dispatch(updateAuctionProps(auctionProps));
+    	dispatch(updateOwner({id, _address, auctionItem}));
     	const interactInterface = {
     		getId() {
     			return id;
     		},
     		getAuctionProps() {
     			return auctionProps;
+    		},
+    		getAuctionItem() {
+    			return auctionItem;
     		}
     	};
     	backend.Creator(ctc, interactInterface);
     	setPreview(true);
+    	await sleep(1000);
+    	setViewContract(true);
+    	setInit(false);
     };
     const copy = async(e) => {
     	e.preventDefault();
@@ -99,7 +111,7 @@ function Auctioneer() {
     	const reader = new FileReader();
 
     	reader.onload = () => {
-    		setAuctionProps({auctionItem : reader.readAsDataUrl(file);});
+    		setAuctionItem(reader.readAsDataUrl(file));
     	};
     };
     const viewAuctionProps = () => {
@@ -118,14 +130,17 @@ function Auctioneer() {
 		<div>
 			{creator && 
 				<div className="asker">
-					<h1>Copy the Contract Info below and give it to your opponent</h1>
-					<div className="">
+					{viewContract &&
+					 <h1>Copy the Contract Info below and give it to your opponent</h1>
+					 <div className="">
 						{ctcInfoStr}
-					</div>
-					<div className="copy_button">
+					 </div>
+					 <div className="copy_button">
 						<button className="" onClick={copy}>Copy</button>
-					</div>
-					<div className="">
+					 </div>
+					}
+					{init && 
+					 <div className="">
 						<h1>Please Initialize the Auction Props</h1>
 						<div className="">
 							<input value={} placeholder="Id / Name of auction Item" onChange={(e) => setId(e.currentTarget.value)} type="text"/>
@@ -135,13 +150,14 @@ function Auctioneer() {
 						</div>
 						{ preview &&
 							<div className="">
-								<image src={auctionProps.auctionItem}/>
+								<image src={auctionItem}/>
 							</div>
 						}
 						<div className="">
 							<button className="" onClick={initAuctionProps}>Initialize Auction Props</button>
 						</div>
-					</div>
+					 </div>
+					}
 				</div>
 			}
 			{bidder && 
