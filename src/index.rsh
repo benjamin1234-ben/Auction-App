@@ -26,8 +26,8 @@ const emptyAuction = { startingBid: 0, timeout: 0 };
 
 export const main = Reach.App(() => {
 
-    const Creator = Participant('Creator', CreatorInterface);
-    const Owner = ParticipantClass('Owner', OwnerInterface);
+    const Creator = Participant('Auctioneer', CreatorInterface);
+    const Owner = ParticipantClass('Bidders', OwnerInterface);
     init();
 
     Creator.only(() => {

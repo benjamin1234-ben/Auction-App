@@ -6,9 +6,9 @@ import { getAccount } from '../redux/selector';
 import { updateContract, updateAuctionProps, updateAddress } from '../redux/slice';
 import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
-import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
+// import { ALGO_MyAlogoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
-reach.setWalletFallback(reach.walletFallback({providerEnv: "TestNet", MyAlgoConnect}));
+// reach.setWalletFallback(reach.walletFallback({providerEnv: "TestNet", MyAlgoConnect}));
 
 const {standardUnit} = reach;
 const sleep = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -28,12 +28,12 @@ function Auctioneer() {
 	const [ctcInfoStr, setCtcInfoStr] = useState();
 	const [preview, setPreview] = useState(false);
 	const dispatch = useDispatch();
-	const _fetch = useSelector();
+	// const _fetch = useSelector();
 	const navigate = useNavigate();
-	const params = useParams();
+	// const params = useParams();
 
-    useEffect((ctcInfoStr) => {
-    	if(!ctcInfoStr && params.role == "creator") {
+    useEffect(async (ctcInfoStr) => {
+    	if(!ctcInfoStr && useParams().role == "creator") {
     		setCreator(true);
     		setInit(true);
     		const account = _fetch(getAccount.acc);
@@ -42,7 +42,7 @@ function Auctioneer() {
 	    	set_Address(await ctc.getAddress());
 	    	dispatch(updateContract(ctc));
 	    	dispatch(updateAddress(_address));
-    	} else if(ctcInfoStr || params.role == "bidder") {
+    	} else if(ctcInfoStr || useParams().role == "bidder") {
     		setBidder(true);
     		const account = _fetch(getAccount.acc);
     		if(ctcInfoStr) {
@@ -99,11 +99,11 @@ function Auctioneer() {
     	setCreator(false);
     	setwaiting(true);
     	await sleep(10000);
-    	if(timeout == false && params.role == "creator") { navigate("/auction/creator"); };
+    	if(timeout == false && useParams().role == "creator") { navigate("/auction/creator"); };
     };
     const acceptTerms = (e) => {
     	e.preventDefault();
-    	if(timeout == false && params.role == "bidder") { navigate("/auction/bidder"); };
+    	if(timeout == false && useParams().role == "bidder") { navigate("/auction/bidder"); };
     };
     const handleFile = (e) => {
     	e.preventDefault();
@@ -115,13 +115,13 @@ function Auctioneer() {
     	};
     };
     const viewAuctionProps = () => {
-    	if(ctcInfoStr && params.role == "bidder") {
+    	if(ctcInfoStr && useParams().role == "bidder") {
 			<h1>These are the Auction Props</h1>
 			<h1>Owner : {address}</h1>
 			<h1>Starting Bid : {startingBid standardUnit}</h1>
 			<h1>Time Duration : {timeout}</h1>
 			<h1>Auction Item : {id}</h1>
-		} else if(!ctcInfoStr && params.role == "bidder") {
+		} else if(!ctcInfoStr && useParams().role == "bidder") {
 			<h1>Attach the Contract to see the Auction Props</h1>
 		}
     };
@@ -174,7 +174,7 @@ function Auctioneer() {
 					</div>
 				</div>
 			}
-			{(waiting && params.role == "creator") &&
+			{(waiting && useParams().role == "creator") &&
 				<div>
 			        Waiting for the Bidders...
 			    </div>
